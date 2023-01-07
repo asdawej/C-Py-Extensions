@@ -16,10 +16,19 @@ main(
 ) -> int
 
 add(
-    a: int, b: int
+    int, int
 ) -> int
 
 fldiv(
-    p: int, q: int
+    int, int
 ) -> int
+```
+
+## Matrix.pyd
+
+```Python
+isshape(
+    list[list[float]],
+    list[list[float]]
+) -> bool
 ```
