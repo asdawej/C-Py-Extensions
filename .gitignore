@@ -1,3 +1,5 @@
 .vscode/
 *.exe
 编译 & 导入指南.txt
+*.pyd
+test.py

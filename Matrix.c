@@ -1,71 +1,7 @@
-#define PY_SSIZE_T_CLEAN
-#include <Python.h>
-#include "__defines.h"
-
-#define PyList PyObject*
-#define PyFloat PyObject*
-#define PyBool PyObject*
-#define bool_t int
+#include "matrix.h"
 
 
-//  double** mat
-//  int m
-//  int n
-TDF struct {
-    DBL** mat;
-    int m;
-    int n;
-} Matrix;
-
-
-Matrix _arr2mat(PyList);
-PyList _mat2arr(Matrix);
-bool_t _isshape(Matrix, Matrix);
-static PyBool isshape(PyObject*, PyObject*);
-
-
-static char isshape_doc[] = {
-"To check whether 2 arrays are the same shape\n\
-in:\n\
-    list[list[float]]\n\
-    list[list[float]]\n\
-out:\n\
-    bool"
-};
-
-
-static PyMethodDef
-MatrixMethods[] = {
-    {
-        "isshape",
-        isshape,
-        METH_VARARGS,
-        isshape_doc
-    },
-    {NULL, NULL, 0, NULL}
-};
-
-
-static char Matrix_doc[] = "Matrix Module";
-
-
-static struct PyModuleDef
-MatrixModule = {
-    PyModuleDef_HEAD_INIT,
-    "Matrix",
-    Matrix_doc,
-    -1,
-    MatrixMethods
-};
-
-
-PyMODINIT_FUNC
-PyInit_Matrix(void){
-    return PyModule_Create(&MatrixModule);
-}
-
-
-/*========================================================================*/
+/*====================================函数区====================================*/
 
 
 int main(){
@@ -160,7 +96,7 @@ bool_t _isshape(Matrix arr1, Matrix arr2){
 
 // PUBLIC
 //
-// To check whether 2 Python array have the same shape
+// To check whether 2 Python arr have the same shape
 //
 // in:
 //  PyList[ PyList[ PyFloat ]]
@@ -168,16 +104,80 @@ bool_t _isshape(Matrix arr1, Matrix arr2){
 // out:
 //  PyBool
 static PyBool isshape(PyObject* self, PyObject* args){
-    PyList arr_a = PyTuple_GetItem(args, 0);
-    PyList arr_b = PyTuple_GetItem(args, 1);
+    PyList arr_a;
+    PyList arr_b;
+    if (!PyArg_ParseTuple(args, "OO", &arr_a, &arr_b)){
+        return NULL;
+    }
     if (PyList_Check(arr_a) && PyList_Check(arr_b)){
         if (
             _isshape(
-                _arr2mat(arr_a),
-                _arr2mat(arr_b)
+                _arr2mat(arr_a), _arr2mat(arr_b)
             )
         ) Py_RETURN_TRUE;
         else Py_RETURN_FALSE;
+    }
+    else return NULL;
+}
+
+
+// PRIVATE
+//
+// Add 2 Matrix
+//
+// in:
+//  Matrix
+//  Matrix
+// out:
+//  Matrix
+Matrix _mat_add(Matrix mat_a, Matrix mat_b){
+    if (_isshape(mat_a, mat_b)){
+        // Initialize Matrix
+        DBL** ret = (DBL**)MLC(
+            SZF(DBL*) * mat_a.m
+        );
+
+        // Allocate memory
+        for (RGT i = 0; i < mat_a.m; i++){
+            ret[i] = (DBL*)MLC(
+                SZF(DBL) * mat_a.n
+            );
+        }
+
+        // Give value
+        for (RGT i = 0; i < mat_a.m; i++){
+            for (RGT j = 0; j < mat_a.n; j++){
+                ret[i][j] = mat_a.mat[i][j]+mat_b.mat[i][j];
+            }
+        }
+        Matrix mat_ret = {ret, mat_a.m, mat_a.n};
+        return mat_ret;
+    }
+}
+
+
+// PUBLIC
+//
+// Add 2 Python arr
+//
+// in:
+//  PyList[ PyList[ PyFloat ]]
+//  PyList[ PyList[ PyFloat ]]
+// out:
+//  PyList[ PyList[ PyFloat ]]
+static PyList mat_add(PyObject* self, PyObject* args){
+    PyList arr_a;
+    PyList arr_b;
+    if (!PyArg_ParseTuple(args, "OO", &arr_a, &arr_b)){
+        return NULL;
+    }
+    if (PyList_Check(arr_a) && PyList_Check(arr_b)){
+        Matrix mat_a = _arr2mat(arr_a);
+        Matrix mat_b = _arr2mat(arr_b);
+        if (_isshape(mat_a, mat_b)){
+            return _mat2arr(_mat_add(mat_a, mat_b));
+        }
+        else return NULL;
     }
     else return NULL;
 }
