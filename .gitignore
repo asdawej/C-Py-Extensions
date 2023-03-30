@@ -3,3 +3,4 @@
 编译 & 导入指南.txt
 *.pyd
 test.py
+__pycache__/
